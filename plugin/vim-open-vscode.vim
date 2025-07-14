@@ -22,10 +22,18 @@ if !exists('g:vscode_path')
   endif
 endif
 
+" Enable/disable opening files at current line position
+" Set to 0 to disable line positioning
+if !exists('g:vscode_goto_line')
+  let g:vscode_goto_line = 0
+endif
+
 " Function to open current file in VS Code
 function! s:OpenCurrentFileInVSCode()
   let l:current_file = expand('%:p')
   let l:current_dir = expand('%:p:h')
+  let l:current_line = line('.')
+  let l:current_col = col('.')
   
   if empty(l:current_file)
     echohl WarningMsg
@@ -34,18 +42,37 @@ function! s:OpenCurrentFileInVSCode()
     return
   endif
   
-  " Change to the current file's directory and open the file
+  " Format: --goto line:column
+  let l:goto_arg = '--goto ' . l:current_line . ':' . l:current_col
+  
+  " Change to the current file's directory and open the file at current line
   if has('win32') || has('win64')
     " Use start with /B flag to suppress cmd window
-    let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' ' . shellescape(l:current_file)
+    if g:vscode_goto_line
+      let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file)
+    else
+      let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' ' . shellescape(l:current_file)
+    endif
   elseif has('mac')
-    let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_file)
+    if g:vscode_goto_line
+      let l:cmd = 'open -a "' . g:vscode_path . '" --args --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file)
+    else
+      let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_file)
+    endif
   else
-    let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file) . ' &'
+    if g:vscode_goto_line
+      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file) . ' &'
+    else
+      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file) . ' &'
+    endif
   endif
   
   call system(l:cmd)
-  echo 'Opened ' . l:current_file . ' in VS Code'
+  if g:vscode_goto_line
+    echo 'Opened ' . l:current_file . ' at line ' . l:current_line . ':' . l:current_col . ' in VS Code'
+  else
+    echo 'Opened ' . l:current_file . ' in VS Code'
+  endif
 endfunction
 
 " Function to open current directory in VS Code
