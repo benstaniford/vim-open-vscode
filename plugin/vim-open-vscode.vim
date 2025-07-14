@@ -25,7 +25,7 @@ endif
 " Enable/disable opening files at current line position
 " Set to 0 to disable line positioning
 if !exists('g:vscode_goto_line')
-  let g:vscode_goto_line = 0
+  let g:vscode_goto_line = 1
 endif
 
 " Function to open current file in VS Code
@@ -49,19 +49,19 @@ function! s:OpenCurrentFileInVSCode()
   if has('win32') || has('win64')
     " Use start with /B flag to suppress cmd window
     if g:vscode_goto_line
-      let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file)
+      let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col 
     else
       let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' ' . shellescape(l:current_file)
     endif
   elseif has('mac')
     if g:vscode_goto_line
-      let l:cmd = 'open -a "' . g:vscode_path . '" --args --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file)
+      let l:cmd = 'open -a "' . g:vscode_path . '" --args --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col 
     else
       let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_file)
     endif
   else
     if g:vscode_goto_line
-      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' --goto ' . l:current_line . ':' . l:current_col . ' ' . shellescape(l:current_file) . ' &'
+      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col 
     else
       let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file) . ' &'
     endif
