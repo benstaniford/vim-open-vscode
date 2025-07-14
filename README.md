@@ -107,4 +107,4 @@ Ensure the VS Code executable has the correct permissions and you have permissio
 
 ## License
 
-MIT License. See LICENSE file for details.
+GPL Version 3.0
