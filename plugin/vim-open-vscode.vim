@@ -35,14 +35,13 @@ function! s:OpenCurrentFileInVSCode()
   endif
   
   " Change to the current file's directory and open the file
-  let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file)
-  
   if has('win32') || has('win64')
-    let l:cmd = 'start cmd /c "' . l:cmd . '"'
+    " Use start with /B flag to suppress cmd window
+    let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' ' . shellescape(l:current_file)
   elseif has('mac')
     let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_file)
   else
-    let l:cmd = l:cmd . ' &'
+    let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file) . ' &'
   endif
   
   call system(l:cmd)
@@ -54,14 +53,13 @@ function! s:OpenCurrentDirInVSCode()
   let l:current_dir = getcwd()
   
   " Open the current working directory
-  let l:cmd = g:vscode_path . ' ' . shellescape(l:current_dir)
-  
   if has('win32') || has('win64')
-    let l:cmd = 'start cmd /c "' . l:cmd . '"'
+    " Use start with /B flag to suppress cmd window
+    let l:cmd = 'start /B /D ' . shellescape(l:current_dir) . ' ' . g:vscode_path . ' .'
   elseif has('mac')
     let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_dir)
   else
-    let l:cmd = l:cmd . ' &'
+    let l:cmd = g:vscode_path . ' ' . shellescape(l:current_dir) . ' &'
   endif
   
   call system(l:cmd)
