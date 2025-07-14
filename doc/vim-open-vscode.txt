@@ -21,6 +21,9 @@ vim-open-vscode is a simple Vim plugin that allows you to open VS Code from
 within Vim. It provides commands to open either the current file or the
 current directory in VS Code while maintaining the proper working directory.
 
+It also supports opening the current file at the exact line and column where
+your cursor is in Vim (by default).
+
 ==============================================================================
 2. INSTALLATION                                 *vim-open-vscode-installation*
 
@@ -62,13 +65,25 @@ Examples: >
     let g:vscode_path = 'code'
 <
 
+                                                                *g:vscode_goto_line*
+g:vscode_goto_line~
+    Default: 1
+    
+    If set to 1 (default), the plugin will open the current file in VS Code at the exact line and column of the cursor in Vim using VS Code's --goto flag.
+    If set to 0, the plugin will open the file without specifying a line/column.
+
+Example: >
+    let g:vscode_goto_line = 0   " Disable line/column positioning
+<
+
 ==============================================================================
 4. COMMANDS                                         *vim-open-vscode-commands*
 
                                                                        *:Code*
 :Code~
     Opens the current file in VS Code. The working directory in VS Code will
-    be set to the directory containing the current file.
+    be set to the directory containing the current file. By default, the file
+    will open at the same line and column as your cursor in Vim.
 
 :Code .~
     Opens the current directory (Vim's working directory) in VS Code as a
@@ -78,7 +93,7 @@ Examples: >
 5. EXAMPLES                                         *vim-open-vscode-examples*
 
 Basic usage: >
-    :Code          " Open current file in VS Code
+    :Code          " Open current file in VS Code (at current line/column)
     :Code .        " Open current directory in VS Code
 <
 
@@ -93,6 +108,9 @@ Adding key mappings to your vimrc: >
 Configuration in vimrc: >
     " Set custom VS Code path
     let g:vscode_path = '/usr/local/bin/code'
+    
+    " Disable line/column positioning
+    let g:vscode_goto_line = 0
     
     " Add key mappings
     nnoremap <leader>vs :Code<CR>
@@ -110,6 +128,11 @@ Problem: VS Code opens but not in the correct directory.
 Solution: The plugin uses the directory of the current file for `:Code` and
          Vim's working directory for `:Code .`. Make sure you're in the
          correct directory or the file is saved.
+
+Problem: VS Code does not open at the correct line/column.
+Solution: Make sure you are using a recent version of VS Code that supports
+         the --goto flag. If you experience issues, you can disable this
+         feature by setting |g:vscode_goto_line| to 0 in your vimrc.
 
 Problem: Permission denied errors.
 Solution: Make sure the VS Code executable has the correct permissions and
