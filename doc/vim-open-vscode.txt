@@ -1,0 +1,119 @@
+*vim-open-vscode.txt*  Open VS Code from Vim                   *vim-open-vscode*
+
+Author: Ben Staniford
+License: MIT
+Version: 1.0
+
+==============================================================================
+CONTENTS                                            *vim-open-vscode-contents*
+
+1. Introduction ...................... |vim-open-vscode-introduction|
+2. Installation ...................... |vim-open-vscode-installation|
+3. Configuration ..................... |vim-open-vscode-configuration|
+4. Commands .......................... |vim-open-vscode-commands|
+5. Examples .......................... |vim-open-vscode-examples|
+6. Troubleshooting ................... |vim-open-vscode-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                                 *vim-open-vscode-introduction*
+
+vim-open-vscode is a simple Vim plugin that allows you to open VS Code from
+within Vim. It provides commands to open either the current file or the
+current directory in VS Code while maintaining the proper working directory.
+
+==============================================================================
+2. INSTALLATION                                 *vim-open-vscode-installation*
+
+Using vim-plug: >
+    Plug 'benstaniford/vim-open-vscode'
+<
+
+Using Vundle: >
+    Plugin 'benstaniford/vim-open-vscode'
+<
+
+Using native package management (Vim 8+): >
+    git clone https://github.com/benstaniford/vim-open-vscode.git \
+        ~/.vim/pack/plugins/start/vim-open-vscode
+<
+
+==============================================================================
+3. CONFIGURATION                               *vim-open-vscode-configuration*
+
+                                                                *g:vscode_path*
+g:vscode_path~
+    Default: 'code'
+    
+    Specifies the path to the VS Code executable. By default, the plugin
+    assumes 'code' is in your PATH. If VS Code is installed in a different
+    location, you can specify the full path.
+
+Examples: >
+    " Windows
+    let g:vscode_path = 'C:\Program Files\Microsoft VS Code\bin\code.cmd'
+    
+    " macOS
+    let g:vscode_path = '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
+    
+    " Linux
+    let g:vscode_path = '/usr/bin/code'
+    
+    " Or simply use 'code' if it's in your PATH
+    let g:vscode_path = 'code'
+<
+
+==============================================================================
+4. COMMANDS                                         *vim-open-vscode-commands*
+
+                                                                       *:Code*
+:Code~
+    Opens the current file in VS Code. The working directory in VS Code will
+    be set to the directory containing the current file.
+
+:Code .~
+    Opens the current directory (Vim's working directory) in VS Code as a
+    workspace.
+
+==============================================================================
+5. EXAMPLES                                         *vim-open-vscode-examples*
+
+Basic usage: >
+    :Code          " Open current file in VS Code
+    :Code .        " Open current directory in VS Code
+<
+
+Adding key mappings to your vimrc: >
+    " Open current file in VS Code
+    nnoremap <leader>c :Code<CR>
+    
+    " Open current directory in VS Code
+    nnoremap <leader>C :Code .<CR>
+<
+
+Configuration in vimrc: >
+    " Set custom VS Code path
+    let g:vscode_path = '/usr/local/bin/code'
+    
+    " Add key mappings
+    nnoremap <leader>vs :Code<CR>
+    nnoremap <leader>vd :Code .<CR>
+<
+
+==============================================================================
+6. TROUBLESHOOTING                             *vim-open-vscode-troubleshooting*
+
+Problem: VS Code doesn't open or command not found error.
+Solution: Make sure VS Code is installed and the `code` command is available
+         in your PATH, or set |g:vscode_path| to the correct executable path.
+
+Problem: VS Code opens but not in the correct directory.
+Solution: The plugin uses the directory of the current file for `:Code` and
+         Vim's working directory for `:Code .`. Make sure you're in the
+         correct directory or the file is saved.
+
+Problem: Permission denied errors.
+Solution: Make sure the VS Code executable has the correct permissions and
+         that you have permission to execute it.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
