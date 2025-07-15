@@ -28,80 +28,103 @@ if !exists('g:vscode_goto_line')
   let g:vscode_goto_line = 1
 endif
 
-" Function to open current file in VS Code
-function! s:OpenCurrentFileInVSCode()
-  let l:current_file = expand('%:p')
-  let l:current_dir = expand('%:p:h')
-  let l:current_line = line('.')
-  let l:current_col = col('.')
-  
-  if empty(l:current_file)
-    echohl WarningMsg
-    echo 'No file is currently open'
-    echohl None
-    return
-  endif
-  
-  " Format: --goto line:column
-  let l:goto_arg = '--goto ' . l:current_line . ':' . l:current_col
-  
-  " Change to the current file's directory and open the file at current line
-  if has('win32') || has('win64')
-    if g:vscode_goto_line
-      let l:cmd = 'cmd /c cd /d ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col
-    else
-      let l:cmd = 'cmd /c cd /d ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file)
-    endif
-  elseif has('mac')
-    if g:vscode_goto_line
-      let l:cmd = 'open -a "' . g:vscode_path . '" --args --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col 
-    else
-      let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_file)
-    endif
-  else
-    if g:vscode_goto_line
-      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' --goto ' . shellescape(l:current_file) . ':' . l:current_line . ':' . l:current_col 
-    else
-      let l:cmd = 'cd ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' ' . shellescape(l:current_file) . ' &'
-    endif
-  endif
-  
-  call system(l:cmd)
-  if g:vscode_goto_line
-    echo 'Opened ' . l:current_file . ' at line ' . l:current_line . ':' . l:current_col . ' in VS Code'
-  else
-    echo 'Opened ' . l:current_file . ' in VS Code'
-  endif
-endfunction
 
-" Function to open current directory in VS Code
-function! s:OpenCurrentDirInVSCode()
-  let l:current_dir = getcwd()
-  
-  " Open the current working directory
+if has('win32') || has('win64')
+  function! s:ToWindowsPath(target) abort
+    let l:cygpath_cmd = 'cygpath -wa ' . a:target
+    let l:cygpath = system(l:cygpath_cmd)
+    if v:shell_error
+      let l:cygpath_cmd = '"C:/Program Files/Git/usr/bin/cygpath.exe" -wa ' . a:target
+      let l:cygpath = system(l:cygpath_cmd)
+    endif
+    return substitute(l:cygpath, '\%x0a', '', 'g')
+  endfunction
+endif
+
+function! s:OpenInVSCode(target, goto_line)
+  let l:target = a:target
+  let l:goto_line = a:goto_line
+  let l:cmd = ''
+  let l:line = line('.')
+  let l:col = col('.')
+
   if has('win32') || has('win64')
-    let l:cmd = 'cmd /c cd /d ' . shellescape(l:current_dir) . ' && ' . g:vscode_path . ' .'
+    let l:target_win = exists('*s:ToWindowsPath') ? s:ToWindowsPath(l:target) : l:target
+    if isdirectory(l:target_win)
+      let l:cmd = 'cmd /c ' . g:vscode_path . ' ' . shellescape(l:target_win)
+    elseif filereadable(l:target_win)
+      if l:goto_line
+        let l:cmd = 'cmd /c ' . g:vscode_path . ' --goto ' . shellescape(l:target_win) . ':' . l:line . ':' . l:col
+      else
+        let l:cmd = 'cmd /c ' . g:vscode_path . ' ' . shellescape(l:target_win)
+      endif
+    else
+      echohl ErrorMsg | echo 'Target does not exist: ' . l:target_win | echohl None | return
+    endif
   elseif has('mac')
-    let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:current_dir)
+    if isdirectory(l:target)
+      let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:target)
+    elseif filereadable(l:target)
+      if l:goto_line
+        let l:cmd = 'open -a "' . g:vscode_path . '" --args --goto ' . shellescape(l:target) . ':' . l:line . ':' . l:col
+      else
+        let l:cmd = 'open -a "' . g:vscode_path . '" ' . shellescape(l:target)
+      endif
+    else
+      echohl ErrorMsg | echo 'Target does not exist: ' . l:target | echohl None | return
+    endif
   else
-    let l:cmd = g:vscode_path . ' ' . shellescape(l:current_dir) . ' &'
+    if isdirectory(l:target)
+      let l:cmd = g:vscode_path . ' ' . shellescape(l:target) . ' &'
+    elseif filereadable(l:target)
+      if l:goto_line
+        let l:cmd = g:vscode_path . ' --goto ' . shellescape(l:target) . ':' . l:line . ':' . l:col . ' &'
+      else
+        let l:cmd = g:vscode_path . ' ' . shellescape(l:target) . ' &'
+      endif
+    else
+      echohl ErrorMsg | echo 'Target does not exist: ' . l:target | echohl None | return
+    endif
   endif
-  
   call system(l:cmd)
-  echo 'Opened ' . l:current_dir . ' in VS Code'
+  if isdirectory(l:target) || (has('win32') || has('win64') && isdirectory(l:target_win))
+    echo 'Opened directory ' . l:target . ' in VS Code'
+  else
+    if l:goto_line
+      echo 'Opened ' . l:target . ' at line ' . l:line . ':' . l:col . ' in VS Code'
+    else
+      echo 'Opened ' . l:target . ' in VS Code'
+    endif
+  endif
 endfunction
 
 " Function to handle the Code command with arguments
+
 function! s:HandleCodeCommand(...)
   if a:0 == 0
-    " No arguments - open current file
-    call s:OpenCurrentFileInVSCode()
-  elseif a:0 == 1 && a:1 == '.'
-    " Single argument '.' - open current directory
-    call s:OpenCurrentDirInVSCode()
+    let l:current_file = expand('%:p')
+    if empty(l:current_file)
+      echohl WarningMsg | echo 'No file is currently open' | echohl None | return
+    endif
+    call s:OpenInVSCode(l:current_file, g:vscode_goto_line)
+  elseif a:0 == 1
+    let l:arg = a:1
+    if l:arg == '.'
+      let l:dir = getcwd()
+      call s:OpenInVSCode(l:dir, 0)
+    else
+      let l:target = fnamemodify(l:arg, ':p')
+      if isdirectory(l:target)
+        call s:OpenInVSCode(l:target, 0)
+      elseif filereadable(l:target)
+        call s:OpenInVSCode(l:target, g:vscode_goto_line)
+      else
+        echohl ErrorMsg | echo 'Target does not exist: ' . l:target | echohl None | return
+      endif
+    endif
   else
     echohl ErrorMsg
-    echo 'Usage: :Code [.] - Use :Code to open current file, :Code . to open current directory'
+    echo 'Usage: :Code [.] [file|folder] - Use :Code to open current file, :Code . to open current directory, :Code <folder> to open folder'
     echohl None
   endif
 endfunction
