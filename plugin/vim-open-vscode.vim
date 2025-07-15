@@ -107,7 +107,23 @@ function! s:HandleCodeCommand(...)
 endfunction
 
 " Create the :Code command
-command! -nargs=? Code call s:HandleCodeCommand(<f-args>)
+
+function! s:CodeComplete(A, L, P) abort
+  let l:pat = a:A
+  if stridx(l:pat, '~') == 0
+    let l:pat = expand(l:pat)
+  endif
+  let l:globres = glob(l:pat.'*', 0, 1)
+  if type(l:globres) != type([])
+    let l:globres = []
+  endif
+  if empty(l:globres)
+    return []
+  endif
+  return map(l:globres, 'isdirectory(v:val) ? v:val."/" : v:val')
+endfunction
+
+command! -nargs=? -complete=customlist,s:CodeComplete Code call s:HandleCodeCommand(<f-args>)
 
 " Optional: Create mappings (users can add these to their vimrc if desired)
 " nnoremap <leader>c :Code<CR>
